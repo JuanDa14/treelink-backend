@@ -4,6 +4,7 @@ export const formatUser = (user) => {
 		imageURL: user.imageURL,
 		name: user.name,
 		email: user.email,
+		username: user.username,
 	};
 
 	return data;

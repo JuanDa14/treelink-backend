@@ -104,7 +104,11 @@ router.post(
 
 router.post(
 	'/profile',
-	[check('username').custom(isExistUserNameInDB), verifyToken],
+	[
+		check('email').custom(isNotExistEmailInDB),
+		check('username').custom(isExistUserNameInDB),
+		verifyToken,
+	],
 	updateProfile
 );
 

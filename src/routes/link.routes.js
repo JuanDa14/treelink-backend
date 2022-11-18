@@ -14,12 +14,13 @@ import { isNotExistLinkInDB } from '../helpers/index.js';
 
 import { verifyToken, validationsReq, validateFile } from '../middlewares/index.js';
 
-router.get('/', verifyToken, getUserLinks);
+router.use(verifyToken);
+
+router.get('/', getUserLinks);
 
 router.post(
 	'/',
 	[
-		verifyToken,
 		check('name').isString().trim().notEmpty(),
 		check('url').isString().trim().notEmpty(),
 		validateFile,
@@ -31,13 +32,13 @@ router.post(
 router.put(
 	'/:id',
 
-	[verifyToken, check('id').isMongoId(), check('id').custom(isNotExistLinkInDB), validationsReq],
+	[check('id').isMongoId(), check('id').custom(isNotExistLinkInDB), validationsReq],
 	updateUserLink
 );
 
 router.delete(
 	'/:id',
-	[verifyToken, check('id').isMongoId(), check('id').custom(isNotExistLinkInDB), validationsReq],
+	[check('id').isMongoId(), check('id').custom(isNotExistLinkInDB), validationsReq],
 	deleteUserLink
 );
 

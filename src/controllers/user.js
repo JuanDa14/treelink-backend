@@ -307,10 +307,7 @@ export const updateProfile = async (req = request, res = response) => {
 	try {
 		const userInDB = await User.findById(id).select('name email imageURL google username');
 
-		if (!userInDB) return res.status(404).json({ ok: false, message: 'El usuario no existe' });
-
 		if (req.files) {
-			console.log('entra');
 			const { message, ok } = await saveFile(
 				req.files,
 				userInDB.imageURL,

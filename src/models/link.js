@@ -9,7 +9,6 @@ const linkSchema = new Schema(
 			required: true,
 			trim: true,
 			minlength: 3,
-			unique: true,
 		},
 
 		url: {
