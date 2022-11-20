@@ -57,14 +57,7 @@ router.get('/refresh', verifyRefreshToken, getUserRefresh);
 // router.get('/google', verifyWithGoogle, loginUserGoogle);
 router.post(
 	'/google',
-	[
-		check('username').notEmpty().isLength({ min: 3 }).trim(),
-		check('name').notEmpty().isString().trim(),
-		check('email').isEmail().normalizeEmail().trim(),
-		check('imageURL').notEmpty().isString().trim(),
-		check('email').custom(isExistEmailInDB),
-		check('username').custom(isExistUserNameInDB),
-	],
+	[check('email').isEmail().normalizeEmail().trim(), validationsReq, verifyWithGoogle],
 	loginUserGoogle
 );
 
@@ -74,8 +67,6 @@ router.post(
 		check('username').notEmpty().isLength({ min: 3 }).trim(),
 		check('name').notEmpty().isString().trim(),
 		check('email').isEmail().normalizeEmail().trim(),
-		check('email').custom(isExistEmailInDB),
-		check('username').custom(isExistUserNameInDB),
 		validationsReq,
 	],
 
@@ -104,11 +95,7 @@ router.post(
 
 router.post(
 	'/profile',
-	[
-		check('email').custom(isNotExistEmailInDB),
-		check('username').custom(isExistUserNameInDB),
-		verifyToken,
-	],
+	[check('username').custom(isExistUserNameInDB), validationsReq, verifyToken],
 	updateProfile
 );
 

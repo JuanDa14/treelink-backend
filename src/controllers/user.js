@@ -46,7 +46,6 @@ export const loginUser = async (req, res) => {
 
 		return res.status(200).json({
 			ok: true,
-			message: 'Login correcto',
 			user,
 			accessToken,
 			refreshToken,
@@ -60,41 +59,45 @@ export const loginUser = async (req, res) => {
 };
 //TODO: Login con google
 export const loginUserGoogle = async (req = request, res) => {
-	const { name, imageURL, email } = req.body;
+	const { name, email, imageURL } = req;
+
+	const { username } = req.body;
 
 	try {
 		const userInDB = await User.findOne({ email })
 			.select('verified google name email imageURL username')
 			.lean();
 
-		//!Si el usuario no existe
 		if (!userInDB) {
+			const token = uuid();
+
 			const password = process.env.PASSWORD_GOOGLE;
 
-			const newUser = await User.create({
+			await User.create({
+				username,
 				name,
 				email,
-				password,
 				imageURL,
+				password,
 				google: true,
-				verified: true,
+				token,
 			});
 
-			// TODO sengrid en produccion no funciona
-			// const verifiedURL = verifiedLink(user.tokenConfirm);
-			// await sendEmail('validate-email', name, verifiedURL, email, 'Validate Email');
+			const verifiedURL = verifiedLink(token);
 
-			const { accessToken, refreshToken } = await generateJWT(newUser._id, newUser.name);
+			await sendEmail('validate-email', name, verifiedURL, email, 'Verifica tu cuenta');
 
-			const user = formatUser(newUser);
-
-			// return res.status(201).json({ ok: true, message: '¡ Check your email !' })
-			return res.status(201).json({ ok: true, user, accessToken, refreshToken });
+			return res.status(200).json({
+				ok: true,
+				message: '¡Confirme su correo electronico!',
+			});
 		}
 
-		//TODO Si el usuario existe, validar....
-		// if (!user.verified) return res.status(401).json({ ok: false, message: 'Verify your email' });
-		// if (!user.google) return res.status(401).json({ ok: false, message: 'Email already exists' });
+		if (!userInDB.verified)
+			return res.status(401).json({ ok: false, message: 'Verifica tu correo electronico' });
+
+		if (!userInDB.google)
+			return res.status(401).json({ ok: false, message: 'El email ya esta registrado' });
 
 		const { accessToken, refreshToken } = await generateJWT(userInDB._id, userInDB.name);
 
@@ -107,9 +110,10 @@ export const loginUserGoogle = async (req = request, res) => {
 			refreshToken,
 		});
 	} catch (error) {
+		console.log(error);
 		return res.status(500).json({
 			ok: false,
-			message: 'Internal server error',
+			message: 'Error interno del servidor',
 		});
 	}
 };
@@ -256,7 +260,7 @@ export const resetUserPassword = async (req = request, res = response) => {
 };
 
 export const loginUserFacebook = async (req = request, res = response) => {
-	const { name, email, imageURL } = req.body;
+	const { name, email, imageURL, username } = req.body;
 
 	try {
 		let userInDB = await User.findOne({ email })
@@ -267,6 +271,7 @@ export const loginUserFacebook = async (req = request, res = response) => {
 			const password = process.env.PASSWORD_GOOGLE;
 
 			userInDB = await User.create({
+				username,
 				email,
 				name,
 				imageURL,
@@ -302,7 +307,7 @@ export const loginUserFacebook = async (req = request, res = response) => {
 export const updateProfile = async (req = request, res = response) => {
 	const { id } = req;
 
-	const { name, email, username } = req.body;
+	const { name, username } = req.body;
 
 	try {
 		const userInDB = await User.findById(id).select('name email imageURL google username');
@@ -322,17 +327,6 @@ export const updateProfile = async (req = request, res = response) => {
 		if (name) userInDB.name = name;
 
 		if (username) userInDB.username = username;
-
-		if (email) {
-			if (userInDB.google) {
-				return res.status(400).json({
-					ok: false,
-					message: 'Cuenta Google, No puedes cambiar tu correo electronico',
-				});
-			}
-
-			userInDB.email = email;
-		}
 
 		await userInDB.save();
 
@@ -355,7 +349,7 @@ export const getPublicUserLinks = async (req = request, res = response) => {
 
 	try {
 		const user = await User.findOne({ username })
-			.select('name imageURL links username')
+			.select('imageURL links username -_id')
 			.populate('links', 'name url imageURL')
 			.lean();
 
