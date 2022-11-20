@@ -93,11 +93,7 @@ router.post(
 	resetUserPassword
 );
 
-router.post(
-	'/profile',
-	[check('username').custom(isExistUserNameInDB), validationsReq, verifyToken],
-	updateProfile
-);
+router.post('/profile', verifyToken, updateProfile);
 
 router.get(
 	'/:username',
