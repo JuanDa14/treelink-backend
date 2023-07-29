@@ -1,14 +1,20 @@
 import nodemailer from 'nodemailer';
-import nodemailerSendgrid from 'nodemailer-sendgrid';
 
 import { templateForgotPassword, templateValidateEmail } from '../templates/index.js';
 
 export const transporter = () => {
-	const transport = nodemailer.createTransport(
-		nodemailerSendgrid({
-			apiKey: process.env.SENDGRID_API_KEY,
-		})
-	);
+	const transport = nodemailer.createTransport({
+		host: 'smtp.gmail.com',
+		port: 465,
+		secure: true,
+		tls: {
+			rejectUnauthorized: false,
+		},
+		auth: {
+			user: process.env.MAIL_USER,
+			pass: process.env.MAIL_PASSWORD,
+		},
+	});
 	return transport;
 };
 
@@ -29,8 +35,8 @@ export const sendEmail = async (template, username, link, email, subject) => {
 	};
 
 	await transport.sendMail({
-		from: process.env.DEFAULT_EMAIL,
-		to: `${email}`,
+		from: process.env.MAIL_USER,
+		to: email,
 		subject,
 		html: html(),
 	});
