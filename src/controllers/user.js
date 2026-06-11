@@ -163,8 +163,13 @@ export const verifyUserEmail = async (req, res) => {
 
 		if (!user) return res.status(400).json({ ok: false, message: 'EL usuario no existe' });
 
-		if (user.verified)
-			return res.status(400).json({ ok: false, message: 'El usuario ya esta verificado' });
+		if (user.verified) {
+			return res.status(200).json({
+				ok: true,
+				alreadyVerified: true,
+				message: 'El usuario ya esta verificado',
+			});
+		}
 
 		if (user.token !== token)
 			return res.status(400).json({ ok: false, message: 'No tiene permisos para esta accion' });
