@@ -32,7 +32,7 @@ const syncLinksOrder = async (userId, links) => {
 const resolveLinkImage = async ({ req, nameUser, method, previousImageURL = '' }) => {
 	const icon = req.body.icon?.trim();
 
-	if (icon && isValidLinkIcon(icon)) {
+	if (icon && isValidLinkIcon(icon) && !req.files?.file) {
 		if (previousImageURL && method === 'PUT') {
 			await saveFile(null, previousImageURL, nameUser, 'DELETE');
 		}

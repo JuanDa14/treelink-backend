@@ -17,13 +17,15 @@ export const saveFile = async (req, image, collection, method) => {
 	}
 
 	try {
-		if (method === 'PUT' || method === 'DELETE') {
+		if ((method === 'PUT' || method === 'DELETE') && image) {
 			const nameArray = image.split('/');
 			const name = nameArray[nameArray.length - 1];
 			const [public_id] = name.split('.');
-			await cloudinary.uploader.destroy(
-				process.env.CLOUDINARY_FOLDER_NAME + '/' + collection + '/' + public_id
-			);
+			if (public_id) {
+				await cloudinary.uploader.destroy(
+					process.env.CLOUDINARY_FOLDER_NAME + '/' + collection + '/' + public_id
+				);
+			}
 		}
 
 		if (method === 'DELETE') return { ok: true, message: 'Imagen eliminada correctamente' };
