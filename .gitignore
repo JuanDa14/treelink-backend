@@ -1,2 +1,14 @@
 node_modules/
+dist/
+
+# Environment
 .env
+.env.*
+!.env.example
+
+# Cursor (local IDE config)
+.cursor/
+
+# Local git hooks setup
+.githooks/
+scripts/setup-git-hooks.sh
