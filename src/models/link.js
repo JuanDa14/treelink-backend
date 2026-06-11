@@ -30,6 +30,12 @@ const linkSchema = new Schema(
 			default: '',
 		},
 
+		icon: {
+			type: String,
+			trim: true,
+			default: '',
+		},
+
 		featured: {
 			type: Boolean,
 			default: false,

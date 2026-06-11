@@ -14,7 +14,7 @@ import {
 
 import { isNotExistLinkInDB } from '../helpers/index.js';
 
-import { verifyToken, validationsReq, validateFile } from '../middlewares/index.js';
+import { verifyToken, validationsReq, validateFileIfPresent } from '../middlewares/index.js';
 
 router.use(verifyToken);
 
@@ -32,7 +32,8 @@ router.post(
 		check('name').isString().trim().notEmpty(),
 		check('url').isString().trim().notEmpty(),
 		check('description').optional().isString().trim().isLength({ max: 120 }),
-		validateFile,
+		check('icon').optional().isString().trim(),
+		validateFileIfPresent,
 		validationsReq,
 	],
 	createUserLink
@@ -46,7 +47,13 @@ router.patch(
 
 router.put(
 	'/:id',
-	[check('id').isMongoId(), check('id').custom(isNotExistLinkInDB), validationsReq],
+	[
+		check('id').isMongoId(),
+		check('id').custom(isNotExistLinkInDB),
+		check('icon').optional().isString().trim(),
+		validateFileIfPresent,
+		validationsReq,
+	],
 	updateUserLink
 );
 

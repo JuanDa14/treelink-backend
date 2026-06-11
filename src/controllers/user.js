@@ -321,7 +321,9 @@ export const updateProfile = async (req = request, res = response) => {
 	try {
 		const userInDB = await User.findById(id).select('name email imageURL google username bio showBranding');
 
-		if (req.files) {
+		userInDB.username = slugifyUsername(userInDB.username);
+
+		if (req.files?.file) {
 			const { message, ok } = await saveFile(
 				req.files,
 				userInDB.imageURL,
@@ -369,9 +371,16 @@ export const updateProfile = async (req = request, res = response) => {
 			user,
 		});
 	} catch (error) {
-		res.status(500).json({
+		const message =
+			error.name === 'ValidationError'
+				? Object.values(error.errors)
+						.map((e) => e.message)
+						.join(', ')
+				: 'Error interno del servidor';
+
+		res.status(error.name === 'ValidationError' ? 400 : 500).json({
 			ok: false,
-			message: 'Error interno del servidor',
+			message,
 		});
 	}
 };
@@ -394,7 +403,7 @@ export const getPublicUserLinks = async (req = request, res = response) => {
 			_id: { $in: user.links },
 			isActive: { $ne: false },
 		})
-			.select('name url imageURL description featured order')
+			.select('name url imageURL icon description featured order')
 			.sort({ order: 1 })
 			.lean();
 

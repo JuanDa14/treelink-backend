@@ -1,0 +1,26 @@
+export const ALLOWED_LINK_ICONS = [
+	'link',
+	'instagram',
+	'youtube',
+	'twitter',
+	'facebook',
+	'linkedin',
+	'github',
+	'music',
+	'mail',
+	'phone',
+	'map-pin',
+	'shopping-bag',
+	'camera',
+	'globe',
+	'heart',
+	'star',
+	'coffee',
+	'book',
+	'video',
+	'podcast',
+	'tiktok',
+	'whatsapp',
+];
+
+export const isValidLinkIcon = (icon) => ALLOWED_LINK_ICONS.includes(icon);

@@ -4,8 +4,9 @@ import Link from '../models/link.js';
 import User from '../models/user.js';
 
 import { saveFile, parseBool } from '../helpers/index.js';
+import { isValidLinkIcon } from '../constants/link-icons.js';
 
-const LINK_FIELDS = 'name url imageURL description featured isActive order';
+const LINK_FIELDS = 'name url imageURL icon description featured isActive order';
 
 const syncLinksOrder = async (userId, links) => {
 	const user = await User.findById(userId).select('links').lean();
@@ -26,6 +27,27 @@ const syncLinksOrder = async (userId, links) => {
 	);
 
 	return Link.find({ user: userId }).select(LINK_FIELDS).sort({ order: 1 }).lean();
+};
+
+const resolveLinkImage = async ({ req, nameUser, method, previousImageURL = '' }) => {
+	const icon = req.body.icon?.trim();
+
+	if (icon && isValidLinkIcon(icon)) {
+		if (previousImageURL && method === 'PUT') {
+			await saveFile(null, previousImageURL, nameUser, 'DELETE');
+		}
+		return { imageURL: '', icon };
+	}
+
+	if (req.files?.file) {
+		const { ok, message } = await saveFile(req.files, previousImageURL, nameUser, method);
+
+		if (!ok) return { error: { status: 401, message } };
+
+		return { imageURL: message, icon: '' };
+	}
+
+	return null;
 };
 
 export const getUserLinks = async (req, res) => {
@@ -54,9 +76,18 @@ export const createUserLink = async (req = request, res = response) => {
 	try {
 		const userInDB = await User.findById(idUser).lean();
 
-		const { ok, message } = await saveFile(req.files, '', nameUser, req.method);
+		const resolved = await resolveLinkImage({ req, nameUser, method: 'POST' });
 
-		if (!ok) return res.status(401).json({ ok, message });
+		if (!resolved) {
+			return res.status(400).json({
+				ok: false,
+				message: 'Sube una imagen o selecciona un icono',
+			});
+		}
+
+		if (resolved.error) {
+			return res.status(resolved.error.status).json({ ok: false, message: resolved.error.message });
+		}
 
 		const order = await Link.countDocuments({ user: idUser });
 
@@ -64,7 +95,8 @@ export const createUserLink = async (req = request, res = response) => {
 			name,
 			url,
 			description: description.trim(),
-			imageURL: message,
+			imageURL: resolved.imageURL,
+			icon: resolved.icon,
 			featured,
 			isActive,
 			order,
@@ -94,12 +126,20 @@ export const updateUserLink = async (req = request, res = response) => {
 	try {
 		const link = await Link.findById(id);
 
-		if (req.files) {
-			const { ok, message } = await saveFile(req.files, link.imageURL, nameUser, req.method);
+		const resolved = await resolveLinkImage({
+			req,
+			nameUser,
+			method: 'PUT',
+			previousImageURL: link.imageURL,
+		});
 
-			if (!ok) return res.status(401).json({ ok, message });
+		if (resolved?.error) {
+			return res.status(resolved.error.status).json({ ok: false, message: resolved.error.message });
+		}
 
-			link.imageURL = message;
+		if (resolved) {
+			link.imageURL = resolved.imageURL;
+			link.icon = resolved.icon;
 		}
 
 		if (name) link.name = name;
@@ -187,9 +227,11 @@ export const deleteUserLink = async (req = request, res = response) => {
 
 		const link = await Link.findByIdAndDelete(id).lean();
 
-		const { ok, message } = await saveFile(null, link.imageURL, nameUser, req.method);
+		if (link.imageURL) {
+			const { ok, message } = await saveFile(null, link.imageURL, nameUser, req.method);
 
-		if (!ok) return res.status(401).json({ ok, message });
+			if (!ok) return res.status(401).json({ ok, message });
+		}
 
 		userInDB.links = userInDB.links.filter((linkId) => linkId.toString() !== id);
 

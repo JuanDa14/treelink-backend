@@ -53,6 +53,18 @@ Ver [API.md](./API.md) para el listado completo de endpoints.
 - [ ] `GET /api/health` responde correctamente
 - [ ] Conexión a MongoDB exitosa
 - [ ] Registro y verificación de email
+
+## Seed de datos demo
+
+```bash
+cp .env.example .env   # configura MONGO_URI
+npm run seed
+```
+
+Credenciales demo:
+- Email: `demo@treelink.com`
+- Password: `demo1234`
+- Username: `juan-morales`
 - [ ] Login, refresh token y logout
 - [ ] CRUD de enlaces con imágenes
 - [ ] Árbol público por username
