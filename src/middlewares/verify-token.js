@@ -1,9 +1,17 @@
 import jwt from 'jsonwebtoken';
 
-export const verifyToken = (req, res, next) => {
-	const token = req.header('Authorization').split(' ')[1];
+const getBearerToken = (req) => {
+	const authHeader = req.header('Authorization');
 
-	if (!token) return res.status(400).json({ ok: false, message: 'Falta algo en el header' });
+	if (!authHeader?.startsWith('Bearer ')) return null;
+
+	return authHeader.split(' ')[1];
+};
+
+export const verifyToken = (req, res, next) => {
+	const token = getBearerToken(req);
+
+	if (!token) return res.status(401).json({ ok: false, message: 'Token no proporcionado' });
 
 	try {
 		const { id, name } = jwt.verify(token, process.env.SECRET_TOKEN);
@@ -20,9 +28,9 @@ export const verifyToken = (req, res, next) => {
 };
 
 export const verifyRefreshToken = (req, res, next) => {
-	const token = req.header('Authorization').split(' ')[1];
+	const token = getBearerToken(req);
 
-	if (!token) return res.status(400).json({ ok: false, message: 'Falta algo en el header' });
+	if (!token) return res.status(401).json({ ok: false, message: 'Token no proporcionado' });
 
 	try {
 		const { id } = jwt.verify(token, process.env.SECRET_REFRESH_TOKEN);

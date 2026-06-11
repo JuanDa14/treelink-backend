@@ -20,7 +20,14 @@ export const loginUser = async (req, res) => {
 			'password verified google name email imageURL username'
 		);
 
-		const isMatch = await userInDB.comparePassword(password, userInDB.password);
+		if (!userInDB) {
+			return res.status(401).json({
+				ok: false,
+				message: 'Email o contraseña incorrectos',
+			});
+		}
+
+		const isMatch = await userInDB.comparePassword(password);
 
 		if (!isMatch)
 			return res.status(401).json({

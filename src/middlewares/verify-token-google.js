@@ -14,9 +14,10 @@ const verify = async (token) => {
 };
 
 export const verifyWithGoogle = async (req, res, next) => {
-	const token = req.header('Authorization').split(' ')[1];
+	const authHeader = req.header('Authorization');
+	const token = authHeader?.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
-	if (!token) return res.status(400).json({ ok: false, message: 'Falta algo en el header' });
+	if (!token) return res.status(401).json({ ok: false, message: 'Token no proporcionado' });
 
 	try {
 		const { name, picture, email } = await verify(token);
