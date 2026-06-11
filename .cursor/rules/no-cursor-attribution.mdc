@@ -1,0 +1,18 @@
+---
+description: Prohibir atribución de Cursor en commits y PRs
+alwaysApply: true
+---
+
+# Sin atribución de Cursor en Git
+
+Nunca añadas a commits, PRs ni mensajes de git:
+
+- `Co-authored-by: Cursor <cursoragent@cursor.com>`
+- `Made-with: Cursor`
+- Cualquier trailer, footer o mención de Cursor, AI o agentes
+
+Al crear commits:
+
+- Usa solo `git commit -m "mensaje"` o HEREDOC con el mensaje limpio
+- No uses `--trailer`, `--co-authored-by` ni flags de atribución
+- Si detectas que un commit incluyó atribución de Cursor, corrígelo con `git commit --amend` sin pedir al usuario que lo haga manualmente
