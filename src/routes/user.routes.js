@@ -15,6 +15,7 @@ import {
 	updateProfile,
 	getPublicUserLinks,
 	checkUsernameAvailability,
+	resendVerificationEmail,
 } from '../controllers/index.js';
 
 import { isExistEmailInDB, isNotExistEmailInDB, isExistUserNameInDB } from '../helpers/index.js';
@@ -43,6 +44,16 @@ router.post(
 );
 
 router.get('/verified/:token', [check('token').notEmpty().trim(), validationsReq], verifyUserEmail);
+
+router.post(
+	'/resend-verification',
+	authLimiter,
+	[
+		check('email').isEmail().normalizeEmail().trim(),
+		validationsReq,
+	],
+	resendVerificationEmail
+);
 
 router.post(
 	'/login',

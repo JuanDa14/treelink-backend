@@ -20,6 +20,7 @@ Base URL: `http://localhost:4000/api`
 | POST | `/forgot-password` | No | Recuperar contraseña |
 | POST | `/reset-password/:token` | No | Restablecer contraseña |
 | GET | `/verified/:token` | No | Verificar email |
+| POST | `/resend-verification` | No | Reenviar email de verificación (máx. 5/día, body: `{ "email" }`) |
 | POST | `/profile` | Access Token | Actualizar perfil |
 | GET | `/:username` | No | Obtener árbol público |
 

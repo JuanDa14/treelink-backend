@@ -90,6 +90,16 @@ const userSchema = new Schema(
 			type: String,
 			default: '',
 		},
+
+		verificationResendCount: {
+			type: Number,
+			default: 0,
+		},
+
+		verificationResendDate: {
+			type: String,
+			default: '',
+		},
 	},
 	{
 		timestamps: true,

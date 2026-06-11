@@ -13,6 +13,11 @@ import {
 	formatUser,
 	slugifyUsername,
 } from '../helpers/index.js';
+import {
+	getVerificationResendStatus,
+	nextVerificationResendUpdate,
+	MAX_VERIFICATION_RESENDS_PER_DAY,
+} from '../helpers/verification-resend.js';
 
 export const loginUser = async (req, res) => {
 	const { email, password } = req.body;
@@ -187,6 +192,63 @@ export const verifyUserEmail = async (req, res) => {
 		return res.status(500).json({
 			ok: false,
 			message: 'Errror interno del servidor',
+		});
+	}
+};
+
+export const resendVerificationEmail = async (req, res) => {
+	const { email } = req.body;
+
+	try {
+		const user = await User.findOne({ email })
+			.select('name email verified token verificationResendCount verificationResendDate')
+			.lean();
+
+		if (!user) {
+			return res.status(200).json({
+				ok: true,
+				message: 'Si el correo está registrado y pendiente de verificación, recibirás un nuevo enlace.',
+			});
+		}
+
+		if (user.verified) {
+			return res.status(400).json({
+				ok: false,
+				message: 'Esta cuenta ya está verificada. Puedes iniciar sesión.',
+			});
+		}
+
+		const { allowed, remaining } = getVerificationResendStatus(user);
+
+		if (!allowed) {
+			return res.status(429).json({
+				ok: false,
+				message: `Alcanzaste el límite de ${MAX_VERIFICATION_RESENDS_PER_DAY} reenvíos por día. Intenta mañana.`,
+				remaining: 0,
+			});
+		}
+
+		const token = uuid();
+		const resendUpdate = nextVerificationResendUpdate(user);
+
+		await User.findByIdAndUpdate(user._id, {
+			...resendUpdate,
+			token,
+		});
+
+		const verifiedURL = verifiedLink(token);
+		await sendEmail('validate-email', user.name, verifiedURL, user.email, 'Verifica tu cuenta');
+
+		return res.status(200).json({
+			ok: true,
+			message: 'Correo de verificación reenviado. Revisa tu bandeja de entrada.',
+			remaining: remaining - 1,
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			ok: false,
+			message: 'No se pudo reenviar el correo de verificación',
 		});
 	}
 };
