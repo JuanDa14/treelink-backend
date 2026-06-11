@@ -1,61 +1,58 @@
+# TreeLink Backend
 
-# Backend de la app
+API REST para gestión de usuarios y enlaces de TreeLink.
 
-`LINK DEL Frontend : https://github.com/JuanDa14/treelink-frontend`
+## Stack
 
+- Node.js >= 20
+- Express 4
+- MongoDB + Mongoose 8
+- JWT, Cloudinary, Nodemailer
 
-## 🛠 Skills
-NodeJs, Express, JavaScript, Mongoose, MongoDB 😅
+## Requisitos
 
+- Node.js >= 20
+- MongoDB
+- Cuenta Cloudinary
+- Credenciales SMTP (Gmail u otro)
 
-## Ejecutar Localmente
+## Variables de entorno
 
-Clonar el repositorio
-
-```bash
-  git clone https://github.com/JuanDa14/treelink-backend
-```
-
-Ir a la carpeta clonada
-
-```bash
-  cd my-project
-```
-
-Instalar dependencias
+Copia `.env.example` a `.env` y completa los valores:
 
 ```bash
-  npm install
+cp .env.example .env
 ```
 
-Iniciar el servidor
+## Instalación
 
 ```bash
-  npm run dev
+npm install
 ```
 
-
-## Tech Stack
-
-**Client:** ReactJs, TailwindCSS
-
-**Server:** Node, Express, JavaScript, Mongoose, MongoDB
-
-
-## Produccion
-
-Para implementar este proyecto en produccion, ejecute
+## Desarrollo
 
 ```bash
-  npm run build
+npm run dev
 ```
+
+El servidor inicia en `http://localhost:4000`
+
+## Producción
 
 ```bash
-  npm run start
+npm start
 ```
 
-## 🔗 Links
-[![portfolio](https://img.shields.io/badge/my_portfolio-000?style=for-the-badge&logo=ko-fi&logoColor=white)](https://juancode.vercel.app/)
-[![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/juan-david-morales-paredes-617342224/)
-[![instagram](https://img.shields.io/badge/instagram-1DA1F2?style=for-the-badge&logo=instagram&logoColor=white)](https://www.instagram.com/ju4n.code/)
+## Documentación de API
 
+Ver [API.md](./API.md) para el listado completo de endpoints.
+
+## Checklist de verificación
+
+- [ ] `GET /api/health` responde correctamente
+- [ ] Conexión a MongoDB exitosa
+- [ ] Registro y verificación de email
+- [ ] Login, refresh token y logout
+- [ ] CRUD de enlaces con imágenes
+- [ ] Árbol público por username
