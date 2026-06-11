@@ -5,6 +5,7 @@ import User from '../models/user.js';
 
 import { saveFile, parseBool } from '../helpers/index.js';
 import { isValidLinkIcon } from '../constants/link-icons.js';
+import { getStarterBio, getStarterLinks } from '../constants/starter-content.js';
 
 const LINK_FIELDS = 'name url imageURL icon description featured isActive order';
 
@@ -251,6 +252,62 @@ export const deleteUserLink = async (req = request, res = response) => {
 		return res.status(500).json({
 			ok: false,
 			message: 'Error interno del servidor',
+		});
+	}
+};
+
+export const seedDefaultUserData = async (req, res) => {
+	const { id: userId, name: userName } = req;
+
+	try {
+		const linkCount = await Link.countDocuments({ user: userId });
+
+		if (linkCount > 0) {
+			return res.status(400).json({
+				ok: false,
+				message: 'Ya tienes enlaces. Edítalos o elimínalos para usar datos de ejemplo.',
+			});
+		}
+
+		const user = await User.findById(userId).select('name bio links');
+		if (!user) {
+			return res.status(404).json({ ok: false, message: 'Usuario no encontrado' });
+		}
+
+		const starterLinks = getStarterLinks();
+		const createdLinks = [];
+
+		for (const linkData of starterLinks) {
+			const link = await Link.create({
+				...linkData,
+				imageURL: '',
+				user: userId,
+			});
+			createdLinks.push(link._id);
+		}
+
+		const updates = { links: createdLinks };
+
+		if (!user.bio?.trim()) {
+			updates.bio = getStarterBio(user.name || userName);
+		}
+
+		await User.findByIdAndUpdate(userId, updates);
+
+		const links = await Link.find({ user: userId }).select(LINK_FIELDS).sort({ order: 1 }).lean();
+		const updatedUser = await User.findById(userId).select('bio').lean();
+
+		return res.status(201).json({
+			ok: true,
+			message: 'Enlaces de ejemplo creados. Personalízalos cuando quieras.',
+			links,
+			user: { bio: updatedUser.bio },
+		});
+	} catch (error) {
+		console.error(error);
+		return res.status(500).json({
+			ok: false,
+			message: 'No se pudieron crear los datos de ejemplo',
 		});
 	}
 };

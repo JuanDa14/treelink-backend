@@ -10,6 +10,7 @@ import {
 	patchUserLink,
 	reorderUserLinks,
 	deleteUserLink,
+	seedDefaultUserData,
 } from '../controllers/index.js';
 
 import { isNotExistLinkInDB } from '../helpers/index.js';
@@ -19,6 +20,8 @@ import { verifyToken, validationsReq, validateFileIfPresent } from '../middlewar
 router.use(verifyToken);
 
 router.get('/', getUserLinks);
+
+router.post('/seed-defaults', seedDefaultUserData);
 
 router.put(
 	'/reorder',
