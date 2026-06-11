@@ -11,6 +11,7 @@ import {
 	sendEmail,
 	saveFile,
 	formatUser,
+	slugifyUsername,
 } from '../helpers/index.js';
 
 export const loginUser = async (req, res) => {
@@ -333,7 +334,27 @@ export const updateProfile = async (req = request, res = response) => {
 		}
 
 		if (name) userInDB.name = name;
-		if (username) userInDB.username = username;
+		if (username) {
+			const slug = slugifyUsername(username);
+
+			if (slug.length < 3) {
+				return res.status(400).json({
+					ok: false,
+					message: 'El nombre de usuario debe tener al menos 3 caracteres válidos',
+				});
+			}
+
+			const usernameTaken = await User.findOne({ username: slug, _id: { $ne: id } }).lean();
+
+			if (usernameTaken) {
+				return res.status(409).json({
+					ok: false,
+					message: 'Ese nombre de usuario ya está ocupado',
+				});
+			}
+
+			userInDB.username = slug;
+		}
 		if (bio !== undefined) userInDB.bio = bio.trim();
 		if (req.body.showBranding !== undefined) {
 			userInDB.showBranding = req.body.showBranding === 'true' || req.body.showBranding === true;
@@ -356,10 +377,13 @@ export const updateProfile = async (req = request, res = response) => {
 };
 
 export const getPublicUserLinks = async (req = request, res = response) => {
-	const { username } = req.params;
+	const rawUsername = decodeURIComponent(req.params.username || '');
+	const slug = slugifyUsername(rawUsername);
 
 	try {
-		const user = await User.findOne({ username })
+		const user = await User.findOne({
+			$or: [{ username: rawUsername.trim() }, { username: slug }],
+		})
 			.select('imageURL links username name bio showBranding')
 			.lean();
 

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
+import { slugifyUsername } from '../helpers/slugify-username.js';
 
 const { Schema, model, models } = mongoose;
 
@@ -10,6 +11,14 @@ const userSchema = new Schema(
 			required: true,
 			trim: true,
 			minlength: 3,
+			maxlength: 30,
+			set: slugifyUsername,
+			validate: {
+				validator(value) {
+					return /^[a-z0-9][a-z0-9_-]*[a-z0-9]$|^[a-z0-9]{3}$/.test(value);
+				},
+				message: 'El username solo puede tener letras minúsculas, números, guiones y guiones bajos',
+			},
 		},
 
 		name: {

@@ -6,3 +6,4 @@ export * from './index.js';
 export * from './nodemailer.js';
 export * from './format-user.js';
 export * from './parse-bool.js';
+export * from './slugify-username.js';
