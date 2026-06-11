@@ -29,8 +29,10 @@ Todas las rutas requieren Access Token (`Authorization: Bearer <token>`).
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| GET | `/` | Listar enlaces del usuario |
-| POST | `/` | Crear enlace (multipart) |
+| GET | `/` | Listar enlaces del usuario (ordenados) |
+| POST | `/` | Crear enlace (multipart: name, url, file, description?, featured?, isActive?) |
+| PUT | `/reorder` | Reordenar enlaces (`{ "linkIds": ["id1", "id2"] }`) |
+| PATCH | `/:id` | Actualizar campos rápidos (`featured`, `isActive`) |
 | PUT | `/:id` | Actualizar enlace |
 | DELETE | `/:id` | Eliminar enlace |
 

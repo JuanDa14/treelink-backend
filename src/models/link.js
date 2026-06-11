@@ -17,10 +17,32 @@ const linkSchema = new Schema(
 			trim: true,
 		},
 
+		description: {
+			type: String,
+			trim: true,
+			maxlength: 120,
+			default: '',
+		},
+
 		imageURL: {
 			type: String,
 			trim: true,
 			default: '',
+		},
+
+		featured: {
+			type: Boolean,
+			default: false,
+		},
+
+		isActive: {
+			type: Boolean,
+			default: true,
+		},
+
+		order: {
+			type: Number,
+			default: 0,
 		},
 
 		user: {

@@ -1,6 +1,7 @@
 import { request, response } from 'express';
 import { v4 as uuid } from 'uuid';
 
+import Link from '../models/link.js';
 import User from '../models/user.js';
 
 import {
@@ -355,17 +356,26 @@ export const getPublicUserLinks = async (req = request, res = response) => {
 	const { username } = req.params;
 
 	try {
-		const user = await User.findOne({ username })
-			.select('imageURL links username -_id')
-			.populate('links', 'name url imageURL')
-			.lean();
+		const user = await User.findOne({ username }).select('imageURL links username').lean();
 
 		if (!user)
 			return res.status(404).json({ ok: false, message: 'El arbol del usuario no existe' });
 
+		const links = await Link.find({
+			_id: { $in: user.links },
+			isActive: { $ne: false },
+		})
+			.select('name url imageURL description featured order')
+			.sort({ order: 1 })
+			.lean();
+
 		return res.status(200).json({
 			ok: true,
-			user,
+			user: {
+				imageURL: user.imageURL,
+				username: user.username,
+				links,
+			},
 		});
 	} catch (error) {
 		res.status(500).json({
