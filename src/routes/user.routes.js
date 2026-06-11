@@ -24,9 +24,11 @@ import {
 	verifyRefreshToken,
 	verifyWithGoogle,
 } from '../middlewares/index.js';
+import { authLimiter } from '../middlewares/security.js';
 
 router.post(
 	'/register',
+	authLimiter,
 	[
 		check('username').notEmpty().isLength({ min: 3 }).trim(),
 		check('name').notEmpty().trim(),
@@ -43,6 +45,7 @@ router.get('/verified/:token', [check('token').notEmpty().trim(), validationsReq
 
 router.post(
 	'/login',
+	authLimiter,
 	[
 		check('email').isEmail().normalizeEmail().trim(),
 		check('password').notEmpty().isLength({ min: 6 }).trim(),

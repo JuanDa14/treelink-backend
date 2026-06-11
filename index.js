@@ -1,40 +1,23 @@
-import express from 'express';
-import cors from 'cors';
-import fileUpload from 'express-fileupload';
 import * as dotenv from 'dotenv';
+
 dotenv.config();
 
-import db from './src/database/config.js';
-import linkRoutes from './src/routes/link.routes.js';
-import userRoutes from './src/routes/user.routes.js';
+import app from './src/app.js';
+import connectDB from './src/database/config.js';
 
-const options = {
-	origin: process.env.FRONTEND_URL,
+const PORT = process.env.PORT || 4000;
+
+const startServer = async () => {
+	try {
+		await connectDB();
+
+		app.listen(PORT, () => {
+			console.log(`Servidor corriendo en el puerto ${PORT}`);
+		});
+	} catch (error) {
+		console.error('No se pudo iniciar el servidor:', error);
+		process.exit(1);
+	}
 };
 
-const app = express();
-
-//Base de datos
-db();
-
-//Middleware
-app.use(cors(options));
-//? Parseo
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-//?File Upload
-app.use(
-	fileUpload({
-		useTempFiles: true,
-		tempFileDir: '/tmp/',
-		createParentPath: true,
-	})
-);
-
-//Rutas
-app.use('/api/link', linkRoutes);
-app.use('/api/user', userRoutes);
-
-app.listen(process.env.PORT, () => {
-	console.log(`Corriendo en el puerto ${process.env.PORT}`);
-});
+startServer();
