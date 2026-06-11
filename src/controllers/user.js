@@ -18,7 +18,7 @@ export const loginUser = async (req, res) => {
 
 	try {
 		const userInDB = await User.findOne({ email }).select(
-			'password verified google name email imageURL username'
+			'password verified google name email imageURL username bio showBranding'
 		);
 
 		if (!userInDB) {
@@ -189,7 +189,7 @@ export const getUserRefresh = async (req, res) => {
 	const { id } = req;
 
 	try {
-		const user = await User.findById(id).select('name imageURL email username').lean();
+		const user = await User.findById(id).select('name imageURL email username bio showBranding google').lean();
 
 		const { accessToken, refreshToken } = await generateJWT(user._id, user.name);
 
@@ -315,10 +315,10 @@ export const loginUserFacebook = async (req = request, res = response) => {
 export const updateProfile = async (req = request, res = response) => {
 	const { id } = req;
 
-	const { name, username } = req.body;
+	const { name, username, bio } = req.body;
 
 	try {
-		const userInDB = await User.findById(id).select('name email imageURL google username');
+		const userInDB = await User.findById(id).select('name email imageURL google username bio showBranding');
 
 		if (req.files) {
 			const { message, ok } = await saveFile(
@@ -333,8 +333,11 @@ export const updateProfile = async (req = request, res = response) => {
 		}
 
 		if (name) userInDB.name = name;
-
 		if (username) userInDB.username = username;
+		if (bio !== undefined) userInDB.bio = bio.trim();
+		if (req.body.showBranding !== undefined) {
+			userInDB.showBranding = req.body.showBranding === 'true' || req.body.showBranding === true;
+		}
 
 		await userInDB.save();
 
@@ -356,7 +359,9 @@ export const getPublicUserLinks = async (req = request, res = response) => {
 	const { username } = req.params;
 
 	try {
-		const user = await User.findOne({ username }).select('imageURL links username').lean();
+		const user = await User.findOne({ username })
+			.select('imageURL links username name bio showBranding')
+			.lean();
 
 		if (!user)
 			return res.status(404).json({ ok: false, message: 'El arbol del usuario no existe' });
@@ -374,6 +379,9 @@ export const getPublicUserLinks = async (req = request, res = response) => {
 			user: {
 				imageURL: user.imageURL,
 				username: user.username,
+				name: user.name,
+				bio: user.bio || '',
+				showBranding: user.showBranding !== false,
 				links,
 			},
 		});

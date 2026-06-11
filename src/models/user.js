@@ -39,6 +39,18 @@ const userSchema = new Schema(
 			default: 'https://res.cloudinary.com/dbvyaguam/image/upload/v1668489002/user_vvsdds.png',
 		},
 
+		bio: {
+			type: String,
+			trim: true,
+			maxlength: 160,
+			default: '',
+		},
+
+		showBranding: {
+			type: Boolean,
+			default: true,
+		},
+
 		state: {
 			type: String,
 			enum: {
@@ -80,7 +92,6 @@ userSchema.pre('save', function (next) {
 
 	if (!user.isModified('password')) return next();
 
-	// generate a salt
 	bcrypt.genSalt(function (err, salt) {
 		if (err) return next(err);
 
