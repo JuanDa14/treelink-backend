@@ -8,3 +8,4 @@ export * from './format-user.js';
 export * from './parse-bool.js';
 export * from './slugify-username.js';
 export * from './verification-resend.js';
+export * from './password-reset.js';

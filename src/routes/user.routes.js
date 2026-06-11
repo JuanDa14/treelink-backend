@@ -10,6 +10,9 @@ import {
 	loginUserGoogle,
 	loginUserFacebook,
 	forgotUserPassword,
+	sendAuthenticatedPasswordResetCode,
+	resetPasswordWithCode,
+	resetAuthenticatedPasswordWithCode,
 	resetUserPassword,
 	verifyUserEmail,
 	updateProfile,
@@ -106,6 +109,33 @@ router.post(
 		validationsReq,
 	],
 	resetUserPassword
+);
+
+router.post(
+	'/reset-password-code',
+	authLimiter,
+	[
+		check('email', 'Email no valido').isEmail().normalizeEmail().trim(),
+		check('email').custom(isNotExistEmailInDB),
+		check('code').isString().trim().isLength({ min: 6, max: 6 }),
+		check('password').notEmpty().trim().isLength({ min: 6 }),
+		validationsReq,
+	],
+	resetPasswordWithCode
+);
+
+router.post('/password-reset/send', authLimiter, verifyToken, sendAuthenticatedPasswordResetCode);
+
+router.post(
+	'/password-reset/confirm',
+	authLimiter,
+	verifyToken,
+	[
+		check('code').isString().trim().isLength({ min: 6, max: 6 }),
+		check('password').notEmpty().trim().isLength({ min: 6 }),
+		validationsReq,
+	],
+	resetAuthenticatedPasswordWithCode
 );
 
 router.post('/profile', verifyToken, updateProfile);

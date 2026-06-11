@@ -91,6 +91,11 @@ const userSchema = new Schema(
 			default: '',
 		},
 
+		resetCodeExpires: {
+			type: Date,
+			default: null,
+		},
+
 		verificationResendCount: {
 			type: Number,
 			default: 0,

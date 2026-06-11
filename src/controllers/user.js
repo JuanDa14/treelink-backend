@@ -5,13 +5,15 @@ import Link from '../models/link.js';
 import User from '../models/user.js';
 
 import {
-	forgotPasswordLink,
 	verifiedLink,
 	generateJWT,
 	sendEmail,
 	saveFile,
 	formatUser,
 	slugifyUsername,
+	generateResetCode,
+	getResetCodeExpiry,
+	validateResetCode,
 } from '../helpers/index.js';
 import {
 	getVerificationResendStatus,
@@ -270,36 +272,141 @@ export const getUserRefresh = async (req, res) => {
 	}
 };
 
+const issuePasswordResetCode = async (user) => {
+	const code = generateResetCode();
+
+	await User.findByIdAndUpdate(user._id, {
+		token: code,
+		resetCodeExpires: getResetCodeExpiry(),
+	});
+
+	await sendEmail(
+		'forgot-password',
+		user.name,
+		code,
+		user.email,
+		'Código para restablecer contraseña'
+	);
+};
+
+const clearPasswordResetState = (user) => {
+	user.token = '';
+	user.resetCodeExpires = null;
+};
+
 export const forgotUserPassword = async (req, res) => {
 	const { email } = req.body;
 
 	try {
 		const user = await User.findOne({ email }).select('verified google name email').lean();
 
+		if (!user) {
+			return res.status(404).json({ ok: false, message: 'El usuario no existe' });
+		}
+
 		if (!user.verified) return res.status(401).json({ ok: false, message: 'Verifica tu cuenta' });
 
-		if (user.google)
+		if (user.google) {
 			return res
 				.status(401)
 				.json({ ok: false, message: 'Cuenta de google, no puedes cambiar tu contraseña' });
+		}
 
-		const token = uuid();
+		await issuePasswordResetCode(user);
 
-		await User.findByIdAndUpdate(user._id, { token });
+		return res.status(200).json({
+			ok: true,
+			message: 'Te enviamos un código de 6 dígitos a tu correo',
+		});
+	} catch (error) {
+		return res.status(500).json({ ok: false, message: 'Error interno del servidor' });
+	}
+};
 
-		const forgotURL = forgotPasswordLink(token);
+export const sendAuthenticatedPasswordResetCode = async (req, res) => {
+	try {
+		const user = await User.findById(req.id).select('verified google name email').lean();
 
-		await sendEmail(
-			'forgot-password',
-			user.name,
-			forgotURL,
-			user.email,
-			'Restablecer contraseña'
-		);
+		if (!user) return res.status(404).json({ ok: false, message: 'El usuario no existe' });
 
-		return res
-			.status(200)
-			.json({ ok: true, message: 'Revise su correo electronico y restablezca su contraseña' });
+		if (!user.verified) return res.status(401).json({ ok: false, message: 'Verifica tu cuenta' });
+
+		if (user.google) {
+			return res
+				.status(401)
+				.json({ ok: false, message: 'Cuenta de google, no puedes cambiar tu contraseña' });
+		}
+
+		await issuePasswordResetCode(user);
+
+		return res.status(200).json({
+			ok: true,
+			message: 'Te enviamos un código de 6 dígitos a tu correo',
+		});
+	} catch (error) {
+		return res.status(500).json({ ok: false, message: 'Error interno del servidor' });
+	}
+};
+
+export const resetPasswordWithCode = async (req, res) => {
+	const { email, code, password } = req.body;
+
+	try {
+		const user = await User.findOne({ email }).select('token resetCodeExpires google verified');
+
+		if (!user) return res.status(404).json({ ok: false, message: 'El usuario no existe' });
+
+		if (!user.verified) return res.status(401).json({ ok: false, message: 'Verifica tu cuenta' });
+
+		if (user.google) {
+			return res
+				.status(401)
+				.json({ ok: false, message: 'Cuenta de google, no puedes cambiar tu contraseña' });
+		}
+
+		const validationError = validateResetCode(user, code);
+
+		if (validationError) {
+			return res.status(401).json({ ok: false, message: validationError });
+		}
+
+		user.password = password;
+		clearPasswordResetState(user);
+		await user.save();
+
+		return res.status(200).json({ ok: true, message: 'Contraseña actualizada correctamente' });
+	} catch (error) {
+		return res.status(500).json({ ok: false, message: 'Error interno del servidor' });
+	}
+};
+
+export const resetAuthenticatedPasswordWithCode = async (req, res) => {
+	const { code, password } = req.body;
+
+	try {
+		const user = await User.findById(req.id).select('token resetCodeExpires google verified');
+
+		if (!user) return res.status(404).json({ ok: false, message: 'El usuario no existe' });
+
+		if (!user.verified) return res.status(401).json({ ok: false, message: 'Verifica tu cuenta' });
+
+		if (user.google) {
+			return res
+				.status(401)
+				.json({ ok: false, message: 'Cuenta de google, no puedes cambiar tu contraseña' });
+		}
+
+		const validationError = validateResetCode(user, code);
+
+		if (validationError) {
+			return res.status(401).json({ ok: false, message: validationError });
+		}
+
+		user.password = password;
+		clearPasswordResetState(user);
+		await user.save();
+
+		return res.status(200).json({ ok: true, message: 'Contraseña actualizada correctamente' });
 	} catch (error) {
 		return res.status(500).json({ ok: false, message: 'Error interno del servidor' });
 	}
@@ -310,19 +417,19 @@ export const resetUserPassword = async (req = request, res = response) => {
 	const { password } = req.body;
 
 	try {
-		const user = await User.findOne({ token }).select('token');
+		const user = await User.findOne({ token }).select('token resetCodeExpires');
 
 		if (!user) return res.status(404).json({ ok: false, message: 'El usuario no existe' });
 
-		if (user.token !== token)
+		if (user.token !== token) {
 			return res.status(401).json({
 				ok: false,
 				message: 'No tienes permisos para esta accion',
 			});
+		}
 
 		user.password = password;
-		user.token = '';
-
+		clearPasswordResetState(user);
 		await user.save();
 
 		return res.status(200).json({ ok: true, message: 'Contraseña actualizada correctamente' });

@@ -14,6 +14,7 @@ export const buildEmailLayout = ({
 	heading,
 	greeting,
 	paragraphs = [],
+	codeBlock,
 	ctaLabel,
 	ctaUrl,
 	footerNote,
@@ -24,6 +25,13 @@ export const buildEmailLayout = ({
 				`<p style="margin:0 0 16px;font-size:16px;line-height:1.6;color:${COLORS.muted};">${text}</p>`
 		)
 		.join('');
+
+	const codeHtml = codeBlock
+		? `<div style="margin:24px 0;text-align:center;padding:20px;background:#f1f5f9;border-radius:16px;">
+        <p style="margin:0 0 8px;font-size:13px;color:${COLORS.muted};">Tu código de verificación</p>
+        <p style="margin:0;font-size:36px;font-weight:700;letter-spacing:12px;color:${COLORS.text};font-family:monospace;">${codeBlock}</p>
+      </div>`
+		: '';
 
 	const ctaBlock = ctaLabel && ctaUrl
 		? `<table role="presentation" cellspacing="0" cellpadding="0" style="margin:28px 0 8px;">
@@ -65,6 +73,7 @@ export const buildEmailLayout = ({
                 <h1 style="margin:0 0 12px;font-size:26px;line-height:1.25;color:${COLORS.text};letter-spacing:-0.02em;">${heading}</h1>
                 <p style="margin:0 0 20px;font-size:16px;line-height:1.6;color:${COLORS.text};">Hola <strong>${greeting}</strong>,</p>
                 ${bodyParagraphs}
+                ${codeHtml}
                 ${ctaBlock}
                 ${footerNote ? `<p style="margin:24px 0 0;font-size:13px;line-height:1.5;color:${COLORS.muted};">${footerNote}</p>` : ''}
               </td>
