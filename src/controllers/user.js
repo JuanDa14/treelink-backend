@@ -385,6 +385,43 @@ export const updateProfile = async (req = request, res = response) => {
 	}
 };
 
+export const checkUsernameAvailability = async (req = request, res = response) => {
+	const slug = slugifyUsername(decodeURIComponent(req.params.username || ''));
+	const current = slugifyUsername(req.query.current || '');
+
+	try {
+		if (!slug || slug.length < 3) {
+			return res.status(200).json({
+				ok: true,
+				available: false,
+				username: slug,
+				reason: 'too_short',
+			});
+		}
+
+		if (current && slug === current) {
+			return res.status(200).json({
+				ok: true,
+				available: true,
+				username: slug,
+			});
+		}
+
+		const existing = await User.findOne({ username: slug }).select('username').lean();
+
+		return res.status(200).json({
+			ok: true,
+			available: !existing,
+			username: slug,
+		});
+	} catch (error) {
+		return res.status(500).json({
+			ok: false,
+			message: 'Error al verificar el nombre de usuario',
+		});
+	}
+};
+
 export const getPublicUserLinks = async (req = request, res = response) => {
 	const rawUsername = decodeURIComponent(req.params.username || '');
 	const slug = slugifyUsername(rawUsername);

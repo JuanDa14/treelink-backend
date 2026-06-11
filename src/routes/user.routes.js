@@ -14,6 +14,7 @@ import {
 	verifyUserEmail,
 	updateProfile,
 	getPublicUserLinks,
+	checkUsernameAvailability,
 } from '../controllers/index.js';
 
 import { isExistEmailInDB, isNotExistEmailInDB, isExistUserNameInDB } from '../helpers/index.js';
@@ -97,6 +98,13 @@ router.post(
 );
 
 router.post('/profile', verifyToken, updateProfile);
+
+router.get(
+	'/check-username/:username',
+	check('username').notEmpty().isString().trim(),
+	validationsReq,
+	checkUsernameAvailability
+);
 
 router.get(
 	'/:username',
