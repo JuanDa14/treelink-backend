@@ -7,14 +7,14 @@ API REST para gestión de usuarios y enlaces de TreeLink.
 - Node.js >= 20
 - Express 4
 - MongoDB + Mongoose 8
-- JWT, Cloudinary, Nodemailer
+- JWT, Cloudinary, Resend
 
 ## Requisitos
 
 - Node.js >= 20
 - MongoDB
 - Cuenta Cloudinary
-- Credenciales SMTP (Gmail u otro)
+- Cuenta Resend (dominio verificado)
 
 ## Variables de entorno
 
