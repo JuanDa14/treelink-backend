@@ -105,7 +105,7 @@ export const loginUserGoogle = async (req = request, res) => {
 
 			return res.status(200).json({
 				ok: true,
-				message: '¡Confirme su correo electronico!',
+				message: 'Revisa tu correo y spam para confirmar tu cuenta.',
 			});
 		}
 
@@ -151,7 +151,7 @@ export const registerUser = async (req, res) => {
 
 		return res.status(200).json({
 			ok: true,
-			message: '¡Confirme su correo electronico!',
+			message: 'Revisa tu correo y spam para confirmar tu cuenta.',
 		});
 	} catch (error) {
 		console.log(error);
@@ -243,7 +243,7 @@ export const resendVerificationEmail = async (req, res) => {
 
 		return res.status(200).json({
 			ok: true,
-			message: 'Correo de verificación reenviado. Revisa tu bandeja de entrada.',
+			message: 'Correo reenviado. Revisa tu bandeja y spam.',
 			remaining: remaining - 1,
 		});
 	} catch (error) {
@@ -316,7 +316,7 @@ export const forgotUserPassword = async (req, res) => {
 
 		return res.status(200).json({
 			ok: true,
-			message: 'Te enviamos un código de 6 dígitos a tu correo',
+			message: 'Código enviado. Revisa tu correo y spam.',
 		});
 	} catch (error) {
 		return res.status(500).json({ ok: false, message: 'Error interno del servidor' });
@@ -341,7 +341,7 @@ export const sendAuthenticatedPasswordResetCode = async (req, res) => {
 
 		return res.status(200).json({
 			ok: true,
-			message: 'Te enviamos un código de 6 dígitos a tu correo',
+			message: 'Código enviado. Revisa tu correo y spam.',
 		});
 	} catch (error) {
 		return res.status(500).json({ ok: false, message: 'Error interno del servidor' });
